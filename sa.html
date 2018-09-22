@@ -1,0 +1,138 @@
+<html><head><title>Simulated Annealing</title><style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    section {
+      height: 100%;
+      display: table;
+      width: 100%;
+    }
+    div.s {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: center;
+      font-family: arial;
+      text-align: center;
+    }
+    .s .c{
+      display: table;
+      margin: 0 auto;
+    }
+</style></head><body>
+  <section>
+    <div class='s'>
+      <div class='c'>
+        <label>f(x1,x2,...,xn): </label><input type='text' value='-1*Math.abs(Math.sin(x1)*Math.cos(x2)*Math.exp(Math.abs(1-(Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2))/Math.PI))))' id='objfs'/>
+        <br/>
+        <label>Min: </label><input type='number' value='-10' id='min'/>
+        <br/>
+        <label>Max: </label><input type='number' value='10' id='max'/>
+        <br/>
+  <label>Cooling rate: </label><input type='number' value='0.0011987404' id='cr'/>
+  <br/>
+  <label>Stop temperature: </label><input type='number' value='0.00158991' id='st'/>
+  <br/>
+  <label>Initial temperature: </label><input type='number' value='5' id='t'/>
+  <br/>
+  <button onclick="init()">Start</button>
+  <button onclick="stop()">Stop</button>
+  <div id="box" ></div>
+  </div>
+  </div>
+</section>
+<script type='text/javascript'>
+
+var min, objfs, max, ns, req, de, beso=[], T, cr, box = document.getElementById('box')
+function rep(str, find, replace) {
+      return str.replace(new RegExp(find, 'g'), replace);
+}
+Array.prototype.unique = function() {
+    return Array.from(new Set(this));
+}
+function init(){
+  cr=document.getElementById('cr').value
+  st=document.getElementById('st').value
+  T=document.getElementById('t').value
+  objfs=document.getElementById('objfs').value
+  numx=(objfs.match(/x[0-9]/g) || [])//.length
+  numx=numx.unique().length
+  for(i=0;i<numx;i++)
+    objfs=rep(objfs,'x'+(i+1),'x['+(i+1)+']')
+  min=parseInt(document.getElementById('min').value)
+  max=parseInt(document.getElementById('max').value)
+  xx=[]
+  beso=[]
+  for(i=0;i<numx;i++)
+    xx[i+1]=rando(min,max)
+  console.log(xx)
+  Y=objf(objfs,xx)
+  initstate = Y
+  cs = initstate
+  bsf = cs
+  start()
+}
+
+function update() {
+  for(i=0;i<numx;i++)
+    xx[i+1]=rando(min,max)
+  Y=objf(objfs,xx)
+  ns=Y
+  de=ns-cs
+  if(de<0){
+    cs=ns
+    bsf=ns
+    for(i=1;i<=numx;i++)
+      beso[i]=xx[i]
+  }else{
+    prob = setprob(de,T)
+    rand = rando(0,1)
+    if(rand<=prob){
+      cs=ns
+    }
+  }
+  solus = ''
+  T=annsched(T,cr)
+  for (var i=1; i<beso.length; i++) {
+    solus += 'x'+(i)+': '+beso[i]+'<br>'
+  }
+  box.innerHTML = "bsf: "+bsf+"<br>Temp: "+T+"<br>"+solus
+}
+function loop(time) {
+  req = undefined
+  if(T>st){
+    update()
+    start()
+  }else{
+    stop()
+  }
+}
+function start() {
+  if (!req) {
+     req = window.requestAnimationFrame(loop)
+  }
+}
+function stop() {
+  if (req) {
+   window.cancelAnimationFrame(req)
+  }
+  T=document.getElementById('t').value
+  req = undefined
+}
+function annsched(T, cr){
+  return T-(T*cr)
+}
+function setprob(d,T){
+  return Math.exp(-d/T)
+}
+function rando(minl,maxl) {
+  return Math.random() * (maxl - minl) + minl;
+}
+function objf(fn,xx) {
+  x=xx
+  return new Function('return ' + fn)();
+}
+</script>
+</body>
+</html>
