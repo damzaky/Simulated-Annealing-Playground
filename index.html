@@ -1,144 +1,303 @@
----
-layout: post
-title: "Pure css accordion menu"
-date: 2017-11-15
-tipe: demo
----
-<html><head><title>Simulated Annealing</title><style>
-    body, html {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    section {
-      height: 100%;
-      display: table;
-      width: 100%;
-    }
-    div.s {
-      display: table-cell;
-      vertical-align: middle;
-      text-align: center;
-      font-family: arial;
-      text-align: center;
-    }
-    .s .c{
-      display: table;
-      margin: 0 auto;
-    }
-</style></head><body>
-  <section>
+<html>
+<head>
+<script src="visuallibrary.js"></script>
+<style type="text/css">
+body, html{
+  height:100%;
+  width:100%;
+}
+body{
+  margin:0;
+  color: #fff;
+  font-family: arial, sans-serif;
+  background: #969696;
+}
+section{}
+div.s {
+margin:30px auto;
+display:table;
+}
+#esvg{
+  height:0;
+}
+section {
+  height: 100%;
+  display: table;
+  width: 100%;
+}
+.c{
+  display: table-cell;
+vertical-align: middle;
+text-align: center;
+font-family: arial;
+text-align: center;
+}
+.s{
+  display: table;
+  margin: 0 auto;
+}
+</style>
+</head>
+<body>
+<section>
+  <div class='c'>
     <div class='s'>
-      <div class='c'>
-        <label>f(x1,x2,...,xn): </label><input type='text' value='-1*Math.abs(Math.sin(x1)*Math.cos(x2)*Math.exp(Math.abs(1-(Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2))/Math.PI))))' id='objfs'/>
-        <br/>
-        <label>Min: </label><input type='number' value='-10' id='min'/>
-        <br/>
-        <label>Max: </label><input type='number' value='10' id='max'/>
-        <br/>
-  <label>Cooling rate: </label><input type='number' value='0.0011987404' id='cr'/>
-  <br/>
-  <label>Stop temperature: </label><input type='number' value='0.00158991' id='st'/>
-  <br/>
-  <label>Initial temperature: </label><input type='number' value='5' id='t'/>
-  <br/>
-  <button onclick="init()">Start</button>
-  <button onclick="stop()">Stop</button>
-  <div id="box" ></div>
-  </div>
+      <label>f(x1,x2,...,xn): </label><input type='text' value='-1*Math.abs(Math.sin(x1)*Math.cos(x2)*Math.exp(Math.abs(1-(Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2))/Math.PI))))' id='objfs'/>
+      <br/>
+      <label>Min: </label><input type='number' value='-10' id='min'/>
+      <br/>
+      <label>Max: </label><input type='number' value='10' id='max'/>
+      <br/>
+      <label>Cooling rate: </label><input type='number' value='0.0011987404' id='rasidi'/>
+      <br/>
+      <label>Stop temperature: </label><input type='number' value='0.00158991' id='henti'/>
+      <br/>
+      <label>Initial temperature: </label><input type='number' value='5' id='t'/>
+      <br/>
+      <button onclick="init()">Start</button>
+      <button onclick="stop()">Stop</button>
+      <div id="box" ></div>
+      <div id='timer'></div>
+      <svg id='esvg'></svg>
+      <div style='clear:both'></div>
+    </div>
   </div>
 </section>
-<script type='text/javascript'>
-
-var min, objfs, max, ns, req, de, beso=[], T, cr, box = document.getElementById('box')
-function rep(str, find, replace) {
-      return str.replace(new RegExp(find, 'g'), replace);
-}
-Array.prototype.unique = function() {
-    return Array.from(new Set(this));
-}
-function init(){
-  cr=document.getElementById('cr').value
-  st=document.getElementById('st').value
-  T=document.getElementById('t').value
-  objfs=document.getElementById('objfs').value
-  numx=(objfs.match(/x[0-9]/g) || [])//.length
-  numx=numx.unique().length
-  for(i=0;i<numx;i++)
-    objfs=rep(objfs,'x'+(i+1),'x['+(i+1)+']')
-  min=parseInt(document.getElementById('min').value)
-  max=parseInt(document.getElementById('max').value)
+<script>
+var box = document.getElementById('box'), drawn = false, esvg = document.getElementById('esvg'), cre=document.getElementById('rasidi'), ste=document.getElementById('henti'), te=document.getElementById('t'), obje=document.getElementById('objfs'), mine=document.getElementById('min'), maxe=document.getElementById('max')
+/*----BEGIN SIMULATED ANNEALING-----*/
+var cil, objfs, sar, sbar, req, beda, besol=[], Tprat, rasidi
+function init(){//initialization for simulated annealing
+  esvg.style.width='0px'
+  esvg.style.height='0px'
+  rasidi=cre.value //assign cooling rate based on input
+  henti=ste.value //assign minimum temperature
+  Tprat=te.value //assign initial temperature
+  objfs=obje.value
+  numx=(objfs.match(/x[0-9]/g) || [])
+  numx=numx.unique().length//this is actually to count how many different x's in the input function
+  for(rator=0;rator<numx;rator++)
+    objfs=rep(objfs,'x'+(rator+1),'x['+(rator+1)+']')
+  cil=parseInt(mine.value)
+  sar=parseInt(maxe.value)
   xx=[]
-  beso=[]
+  besol=[]
+  scatter = []
   for(i=0;i<numx;i++)
-    xx[i+1]=rando(min,max)
-  console.log(xx)
-  Y=objf(objfs,xx)
-  initstate = Y
-  cs = initstate
-  bsf = cs
+    xx[i+1]=rando(cil,sar) //assign initial x1, x2
+  zet=objf(objfs,xx) //assign objective function with initial parameters: x1, x2
+  stata = zet //assign initial state as the result of zet (objective function)
+  stsek = stata //assign current state as initial state
+  meilleur = stsek //assign best so far as current state
+  if(drawn==true){
+    d3.selectAll("g > *").remove()
+    drawn=false
+  }
+  cletime()
+  timer()
   start()
 }
-
-function update() {
-  for(i=0;i<numx;i++)
-    xx[i+1]=rando(min,max)
-  Y=objf(objfs,xx)
-  ns=Y
-  de=ns-cs
-  if(de<0){
-    cs=ns
-    bsf=ns
-    for(i=1;i<=numx;i++)
-      beso[i]=xx[i]
-  }else{
-    prob = setprob(de,T)
-    rand = rando(0,1)
-    if(rand<=prob){
-      cs=ns
-    }
-  }
-  solus = ''
-  T=annsched(T,cr)
-  for (var i=1; i<beso.length; i++) {
-    solus += 'x'+(i)+': '+beso[i]+'<br>'
-  }
-  box.innerHTML = "bsf: "+bsf+"<br>Temp: "+T+"<br>"+solus
-}
-function loop(time) {
+function loop(time) {// this is the while loop, I hope you're not confused
   req = undefined
-  if(T>st){
-    update()
+  if(Tprat>henti){//loop runs while temperature is still bigger than minimum temperature
+    for(rator=0;rator<numx;rator++)
+      xx[rator+1]=rando(cil,sar)//generate random numbers between [-10,10] as x1, x2
+    zet=objf(objfs,xx)//use x1, x2 as parameters to cost function
+    sbar=zet//assign new state as Y
+    beda=sbar-stsek//assign the difference between new state and current state to delta E
+    if(beda<0){
+      stsek=sbar//assign current state as new state
+      meilleur=sbar//assign best so far as new state
+      for(rator=1;rator<=numx;rator++)
+        besol[rator]=xx[rator]//assign best solutions as x1, x2
+    }else if(rando(0,1)<=pasprob(beda,Tprat)){
+        stsek=sbar//assign current state as new state
+    }
+    solus = ''
+    Tprat=dualann(Tprat,rasidi)//annealing schedule to reduce temperature value
+    for (var rator=1; rator<besol.length; rator++) {
+      solus += 'x'+(rator)+': '+besol[rator]+'<br>'
+    }
+    box.innerHTML = "bsf: "+meilleur+"<br>Temp: "+Tprat+"<br>"+solus
     start()
   }else{
     stop()
   }
 }
+dualann = (Tprat, rasidi) => Tprat-(Tprat*rasidi)//annealing schedule function
+pasprob = (d,Tprat) => Math.exp(-d/Tprat)//set probability function
+rando = (cili,jsar) => Math.random() * (jsar - cili) + cili//random uniform function
+function objf(fn,xx) {
+  x=xx
+  return new Function('return ' + fn)()//objective function, obtained from input on line 46
+}
+/*-----END SIMULATED ANNEALING-----*/
+/*-----START PLOT-----*/
 function start() {
   if (!req) {
      req = window.requestAnimationFrame(loop)
   }
 }
 function stop() {
+  clearTimeout(t)
   if (req) {
-   window.cancelAnimationFrame(req)
+    window.cancelAnimationFrame(req)
   }
-  T=document.getElementById('t').value
+  setscreen()
+  scatter.push({x: -besol[1], y: -meilleur, z: -besol[2]});
+  if(numx==2){
+    change()
+  }
+  Tprat=te.value
   req = undefined
 }
-function annsched(T, cr){
-  return T-(T*cr)
-}
-function setprob(d,T){
-  return Math.exp(-d/T)
-}
-function rando(minl,maxl) {
-  return Math.random() * (maxl - minl) + minl;
-}
-function objf(fn,xx) {
-  x=xx
-  return new Function('return ' + fn)();
-}
+  var j = 10, points = [], alpha = 0, beta = 0, startAngle = Math.PI/4, w, h, sw, sh, origin, svg, mx, my, mouseX, mouseY, surface, pint3d, color
+
+    function rep(str, find, replace) {
+          return str.replace(new RegExp(find, 'g'), replace);
+    }
+    Array.prototype.unique = function() {
+        return Array.from(new Set(this))
+    }
+    function setscreen(){
+      w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      sw = 0.7*w
+      sh = 0.8*h
+      esvg.style.width=sw+'px';
+      esvg.style.height=sh+'px';
+    }
+    function posPointX(d){
+        return d.projected.x;
+    }
+    function posPointY(d){
+        return d.projected.y;
+    }
+    function processData(data, tt){
+        let planes = svg.selectAll('path').data(data[1], function(d){ return d.plane; });
+        planes
+            .enter()
+            .append('path')
+            .attr('class', '_3d')
+            .attr('fill', colorize)
+            .attr('opacity', 0.4)
+            .attr('stroke-opacity', 0.1)
+            .merge(planes)
+            .attr('stroke', 'black')
+            .transition().duration(tt)
+            .attr('d', surface.draw);
+        planes.exit().remove();
+        let pointsz = svg.selectAll('circle').data(data[0], function(d){ return d.id; });
+        pointsz
+            .enter()
+            .append('circle')
+            .attr('class', '_3d')
+            .attr('opacity', 0)
+            .attr('cx', posPointX)
+            .attr('cy', posPointY)
+            .merge(pointsz)
+            .transition().duration(tt)
+            .attr('r', 3)
+            .attr('stroke', '#ff0000')
+            .attr('fill', '#ffffff')
+            .attr('opacity', 1)
+            .attr('cx', posPointX)
+            .attr('cy', posPointY)
+            .attr('d', point3d.draw);
+        pointsz.exit().remove();
+        d3.selectAll('._3d').sort(d3._3d().sort)
+    }
+    function colorize(d){
+        var _y = (d[0].y + d[1].y + d[2].y + d[3].y)/4;
+        return d.ccw ? d3.interpolateSpectral(color(_y)) : d3.color(d3.interpolateSpectral(color(_y))).darker(2.5)
+    }
+    function dragStart(){
+        mx = d3.event.x;
+        my = d3.event.y;
+    }
+    function dragged(){
+        mouseX = mouseX || 0;
+        mouseY = mouseY || 0;
+        beta   = (d3.event.x - mx + mouseX) * Math.PI / 230 ;
+        alpha  = (d3.event.y - my + mouseY) * Math.PI / 230  * (-1);
+
+        processData([point3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(scatter),surface.rotateY(beta + startAngle).rotateX(alpha - startAngle)(points)], 0);
+    }
+    function dragEnd(){
+        mouseX = d3.event.x - mx + mouseX;
+        mouseY = d3.event.y - my + mouseY;
+    }
+    function inite(eq){
+      let xt = []
+        points = [];
+        for(var k = -j; k <= j; k+=0.25){
+            for(var l = -j; l <= j; l+=0.25){
+                xt[1]=k
+                xt[2]=l
+                points.push({x: -k, y: -objf(objfs, xt), z: -l});
+            }
+        }
+        var yMin = d3.min(points, function(d){ return d.y; });
+        var yMax = d3.max(points, function(d){ return d.y; });
+        color.domain([yMin, yMax]);
+        var dataz = [
+            point3d(scatter),
+            surface(points)
+        ];
+        processData(dataz, 1000);
+    }
+    function change(){
+      color = d3.scaleLinear();
+      origin = [sw/2, sh/2]
+      svg    = d3.select('svg').call(d3.drag().on('drag', dragged).on('start', dragStart).on('end', dragEnd)).append('g');
+      mx, my, mouseX, mouseY;
+      surface = d3._3d()
+          .scale(15)
+          .x(function(d){ return d.x; })
+          .y(function(d){ return d.y; })
+          .z(function(d){ return d.z; })
+          .origin(origin)
+          .rotateY(startAngle)
+          .rotateX(-startAngle)
+          .shape('SURFACE', (j*8)+1);
+      point3d = d3._3d()
+              .x(function(d){ return d.x; })
+              .y(function(d){ return d.y; })
+              .z(function(d){ return d.z; })
+              .origin(origin)
+              .rotateY(startAngle)
+              .rotateX(-startAngle)
+              .scale(15);
+        var eqa = function(x1, x2){
+            return -1*Math.abs(Math.sin(x1)*Math.cos(x2)*Math.exp(Math.abs(1-(Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2))/Math.PI))));
+        };
+        inite(eqa);
+        drawn=true
+    }
+    /*-----END PLOT-----*/
+    /*-----START TIMER-----*/
+    var timerz = document.getElementById('timer')
+    function add() {
+      seconds++;
+      if (seconds >= 60) {
+          seconds = 0;
+          minutes++;
+          if (minutes >= 60) {
+              minutes = 0;
+              hours++;
+          }
+      }
+      timerz.innerHTML = (hours ? (hours > 9 ? hours : "0" + hours) : "00") + ":" + (minutes ? (minutes > 9 ? minutes : "0" + minutes) : "00") + ":" + (seconds > 9 ? seconds : "0" + seconds);
+      timer()
+    }
+    function timer() {
+        t = setTimeout(add, 1000);
+    }
+    function cletime() {
+        timerz.innerHTML = "00:00:00";
+        seconds = 0; minutes = 0; hours = 0;
+    }
+    /*-----END TIMER-----*/
 </script>
 </body>
 </html>
