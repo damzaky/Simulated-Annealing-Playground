@@ -1,0 +1,3 @@
+baseurl: demo/
+url: "damzaky.github.io"
+permalink: /:title
